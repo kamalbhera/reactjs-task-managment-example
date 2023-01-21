@@ -1,6 +1,6 @@
-import {Component} from 'react'
-import {v4} from 'uuid'
-
+import { useState } from 'react'
+import { v4 } from 'uuid'
+import { tagsList } from '../../data'
 import {
   HomeContainer,
   CreateTaskContainer,
@@ -26,87 +26,47 @@ import {
 
 // These are the lists used in the application. You can move them to any component needed.
 
-const tagsList = [
-  {
-    optionId: 'HEALTH',
-    displayText: 'Health',
-  },
-  {
-    optionId: 'EDUCATION',
-    displayText: 'Education',
-  },
-  {
-    optionId: 'ENTERTAINMENT',
-    displayText: 'Entertainment',
-  },
-  {
-    optionId: 'SPORTS',
-    displayText: 'Sports',
-  },
-  {
-    optionId: 'TRAVEL',
-    displayText: 'Travel',
-  },
-  {
-    optionId: 'OTHERS',
-    displayText: 'Others',
-  },
-]
+const Home = () => {
+  const [activeTag, setActiveTag] = useState('INITIAL');
+  const [inputText, setInputText] = useState('');
+  const [inputTag, setInputTag] = useState('');
+  const [taskList, setTaskList] = useState([]);
 
-class Home extends Component {
-  state = {
-    inputText: '',
-    inputTag: tagsList[0].optionId,
-    taskList: [],
-    activeTag: 'INITIAL',
-  }
-
-  changeInput = event => {
-    this.setState({inputText: event.target.value})
-  }
-
-  onChangeTag = event => {
-    this.setState({inputTag: event.target.value})
-  }
-
-  submitForm = event => {
+  const submitForm = event => {
     event.preventDefault()
-    const {inputText, inputTag} = this.state
     const newTask = {
       id: v4(),
       task: inputText,
       tag: inputTag,
     }
-    if (inputText.length !== 0) {
-      this.setState(prevState => ({
-        taskList: [...prevState.taskList, newTask],
-        inputText: '',
-        inputTag: '',
-      }))
-    }
-  }
+    setTaskList([...taskList, newTask]);
 
-  onClickActiveTag = event => {
-    this.setState(prevState => ({
-      activeTag:
-        prevState.activeTag === event.target.value
-          ? 'INITIAL'
-          : event.target.value,
-    }))
   }
-
-  renderCreateTaskView = () => {
-    const {inputText, inputTag} = this.state
+  const filterTaskList = () => {
+    const filterTaskList = activeTag === 'INITIAL' ? taskList : taskList.filter(each => each.tag === activeTag)
     return (
+      <>
+        {filterTaskList.map(each => (
+          <TaskListLi key={each.id}>
+            <TaskText>{each.task}</TaskText>
+            <TaskTag>{each.tag}</TaskTag>
+          </TaskListLi>
+        ))}
+      </>
+    )
+  }
+
+  return (
+    <HomeContainer>
       <CreateTaskContainer>
-        <CreateForm onSubmit={this.submitForm}>
+        <CreateForm onSubmit={submitForm}>
           <FormHeading>Create a task!</FormHeading>
           <LabelInputContainer>
             <Label htmlFor="inputText">Task</Label>
             <Input
               type="text"
               placeholder="Enter the task here"
-              onChange={this.changeInput}
+              onChange={(e) => setInputText(e.target.value)}
               value={inputText}
               id="inputText"
             />
@@ -114,7 +74,7 @@ class Home extends Component {
           <LabelInputContainer>
             <Label htmlFor="selectTag">Tags</Label>
             <SelectInput
-              onChange={this.onChangeTag}
+              onChange={(e) => setInputTag(e.target.value)}
               value={inputTag}
               id="selectTag"
             >
@@ -128,31 +88,6 @@ class Home extends Component {
           <Button type="submit">Add Task</Button>
         </CreateForm>
       </CreateTaskContainer>
-    )
-  }
-
-  renderTaskCard = () => {
-    const {taskList, activeTag} = this.state
-    const filterTaskList =
-      activeTag === 'INITIAL'
-        ? taskList
-        : taskList.filter(each => each.tag === activeTag)
-    return (
-      <>
-        {filterTaskList.map(each => (
-          <TaskListLi key={each.id}>
-            <TaskText>{each.task}</TaskText>
-            <TaskTag>{each.tag}</TaskTag>
-          </TaskListLi>
-        ))}
-      </>
-    )
-  }
-
-  renderAddTaskView = () => {
-    const {taskList, activeTag} = this.state
-
-    return (
       <AddTaskContainer>
         <TagsHeading>Tags</TagsHeading>
         <TagsListUl>
@@ -163,7 +98,7 @@ class Home extends Component {
                 <TagsButton
                   type="button"
                   value={each.optionId}
-                  onClick={this.onClickActiveTag}
+                  onClick={() => setActiveTag(each.optionId)}
                   isActive={isActive}
                 >
                   {each.displayText}
@@ -177,20 +112,11 @@ class Home extends Component {
           {taskList.length === 0 ? (
             <NoTaskText>No Tasks Added Yet</NoTaskText>
           ) : (
-            this.renderTaskCard()
+            filterTaskList()
           )}
         </TaskListUl>
       </AddTaskContainer>
-    )
-  }
-
-  render() {
-    return (
-      <HomeContainer>
-        {this.renderCreateTaskView()}
-        {this.renderAddTaskView()}
-      </HomeContainer>
-    )
-  }
+    </HomeContainer>
+  )
 }
 export default Home
